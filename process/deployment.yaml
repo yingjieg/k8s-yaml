@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pe-process-main
+spec:
+  selector:
+    matchLabels:
+      app: pe-process-main
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pe-process-main
+    spec:
+      imagePullSecrets:
+      - name: swr-secret
+      volumes: 
+      - name: appen-pvc
+        persistentVolumeClaim: 
+          claimName: lbl-appen-prod-obsfs-pvc
+      containers:
+      - name: pe-process-main
+        image: swr.cn-east-3.myhuaweicloud.com/lbl-appen/process_main:v7
+        env:
+        - name: CELERY_BROKER_URL
+          value: redis://pe-redis-svc:6379/1
+        - name: CELERY_RESULT_BACKEND
+          value: redis://pe-redis-svc:6379/2
+        - name: REDIS_CACHE_URL
+          value: redis://pe-redis-svc:6379
+        - name: DATABASE_URL
+          value: xxx.xxx.xxx.xxx
+        - name: POSTGRES_DB
+          value: process_db
+        - name: POSTGRES_USER
+          value: xxxx
+        - name: POSTGRES_PASSWORD
+          value: 'xxxxxxxx'
+        - name: DB_PORT
+          value: '3306'
+        ports:
+        - containerPort: 5010
+        resources:
+          limits:
+            memory: "8192Mi"
+            cpu: "4000m"
+          requests:
+            memory: "4096Mi"
+            cpu: "2000m"
+        volumeMounts: 
+        - mountPath: /mnt
+          name: appen-pvc
